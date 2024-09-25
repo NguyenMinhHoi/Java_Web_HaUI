@@ -1,0 +1,36 @@
+package com.example.demo.serivce.impl;
+
+import com.example.demo.model.Address;
+import com.example.demo.repository.AddressRepository;
+import com.example.demo.serivce.AddressService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class AddressSerivceImpl implements AddressService {
+
+    @Autowired
+    AddressRepository addressRepository;
+
+    @Override
+    public List<Address> findAll() {
+        return addressRepository.findAll();
+    }
+
+    @Override
+    public Address findById(Long id) {
+        return addressRepository.findById(id).get();
+    }
+
+    @Override
+    public void deleteById(Long id) {
+         addressRepository.deleteById(id);
+    }
+
+    @Override
+    public void save(Address entity) {
+         addressRepository.save(entity);
+    }
+}

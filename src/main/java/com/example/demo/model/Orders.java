@@ -1,0 +1,39 @@
+package com.example.demo.model;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.sql.Date;
+import java.util.Set;
+
+
+@Entity
+@NoArgsConstructor
+@Data
+public class Orders {
+
+      @Id
+      @GeneratedValue(strategy = GenerationType.IDENTITY)
+      private Long id;
+
+      private Date date;
+
+      @ManyToOne
+      private Voucher voucher;
+
+      @ManyToMany
+      private Set<OrderProduct> products;
+
+      @ManyToOne
+      private Address address;
+
+      private Double total;
+
+      @ManyToOne
+      private Merchant merchant;
+
+      @ManyToOne
+      private User user;
+
+}
