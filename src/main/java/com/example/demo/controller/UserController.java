@@ -115,6 +115,7 @@ public class UserController {
         if (!userOptional.isPresent()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+
         user.setId(userOptional.get().getId());
         user.setUsername(userOptional.get().getUsername());
         user.setEnabled(userOptional.get().isEnabled());
