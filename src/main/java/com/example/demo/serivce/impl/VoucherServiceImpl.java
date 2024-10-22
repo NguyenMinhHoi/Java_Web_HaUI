@@ -1,9 +1,9 @@
 package com.example.demo.serivce.impl;
 
+import com.example.demo.model.Product;
 import com.example.demo.model.Voucher;
 import com.example.demo.repository.VoucherRepository;
 import com.example.demo.serivce.VoucherService;
-import jakarta.persistence.Access;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +30,8 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
-    public void save(Voucher entity) {
+    public Voucher save(Voucher entity) {
 
+        return null;
     }
 }

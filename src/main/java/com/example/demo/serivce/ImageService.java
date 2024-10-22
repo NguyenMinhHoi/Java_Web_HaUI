@@ -1,4 +1,6 @@
 package com.example.demo.serivce;
 
-public interface ImageService extends GenerateService<ImageService>{
+import com.example.demo.model.Image;
+
+public interface ImageService extends GenerateService<Image>{
 }

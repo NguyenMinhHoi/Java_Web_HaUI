@@ -1,6 +1,7 @@
 package com.example.demo.serivce.impl;
 
 import com.example.demo.model.Merchant;
+import com.example.demo.model.Product;
 import com.example.demo.repository.MerchantRepository;
 import com.example.demo.serivce.MerchantService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,8 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     @Override
-    public void save(Merchant entity) {
+    public Merchant save(Merchant entity) {
 
+        return null;
     }
 }

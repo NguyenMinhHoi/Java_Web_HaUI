@@ -37,27 +37,6 @@ public class User implements Serializable {
             inverseJoinColumns = {@JoinColumn(name = "role_id")})
     private Set<Role> roles;
 
-    @Column(nullable = false)
-    @NotBlank(message = "Thiếu Name")
-    private String name;
-
-    @Column(nullable = false)
-    @NotBlank(message = "Thiếu Address")
-    private String address;
-
-    @Column(nullable = false)
-    @NotBlank(message = "Thiếu Phone Number")
-    private String phoneNumber;
-
-    @Column(nullable = false)
-    @NotBlank(message = "Thiếu Email")
-    private String email;
-
-    @Column(nullable = false)
-    @NotBlank(message = "Thiếu Gender")
-    private String gender;
-
-    private RoyalUser royalUser;
 
     @OneToMany
     private Set<Address> addresses;

@@ -1,5 +1,6 @@
 package com.example.demo.serivce.impl;
 
+import com.example.demo.model.Product;
 import com.example.demo.model.Review;
 import com.example.demo.repository.ReviewRepository;
 import com.example.demo.serivce.ReviewService;
@@ -30,7 +31,8 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public void save(Review entity) {
+    public Review save(Review entity) {
 
+        return null;
     }
 }

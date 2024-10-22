@@ -1,5 +1,7 @@
 package com.example.demo.serivce;
 
+import com.example.demo.model.Product;
+
 import java.util.List;
 
 public interface GenerateService<E> {
@@ -9,5 +11,5 @@ public interface GenerateService<E> {
 
     void deleteById(Long id);
 
-    void save(E entity);
+    E save(E entity);
 }

@@ -1,8 +1,9 @@
 package com.example.demo.serivce.impl;
 
+import com.example.demo.model.Image;
+import com.example.demo.model.Product;
 import com.example.demo.repository.ImageRepository;
 import com.example.demo.serivce.ImageService;
-import jakarta.persistence.Access;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,12 +16,12 @@ public class ImageServiceImpl implements ImageService {
     private ImageRepository imageRepository;
 
     @Override
-    public List<ImageService> findAll() {
+    public List<Image> findAll() {
         return List.of();
     }
 
     @Override
-    public ImageService findById(Long id) {
+    public Image findById(Long id) {
         return null;
     }
 
@@ -30,7 +31,8 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public void save(ImageService entity) {
+    public Image save(Image entity) {
 
+        return null;
     }
 }

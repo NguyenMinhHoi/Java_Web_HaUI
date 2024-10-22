@@ -1,6 +1,7 @@
 package com.example.demo.serivce.impl;
 
 import com.example.demo.model.Category;
+import com.example.demo.model.Product;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.serivce.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,8 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public void save(Category entity) {
+    public Category save(Category entity) {
 
+        return null;
     }
 }

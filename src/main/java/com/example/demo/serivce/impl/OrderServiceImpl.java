@@ -1,6 +1,7 @@
 package com.example.demo.serivce.impl;
 
 import com.example.demo.model.Orders;
+import com.example.demo.model.Product;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.serivce.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void save(Orders entity) {
+    public Orders save(Orders entity) {
 
+        return null;
     }
 }

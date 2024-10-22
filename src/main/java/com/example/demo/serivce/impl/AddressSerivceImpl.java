@@ -1,6 +1,7 @@
 package com.example.demo.serivce.impl;
 
 import com.example.demo.model.Address;
+import com.example.demo.model.Product;
 import com.example.demo.repository.AddressRepository;
 import com.example.demo.serivce.AddressService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,8 @@ public class AddressSerivceImpl implements AddressService {
     }
 
     @Override
-    public void save(Address entity) {
+    public Address save(Address entity) {
          addressRepository.save(entity);
+         return null;
     }
 }

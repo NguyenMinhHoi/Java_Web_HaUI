@@ -22,8 +22,20 @@ public class Product {
 
      private Long sold;
 
+     private Boolean isDiscount;
+
+     @ManyToOne
+     private Merchant merchant;
+
      @OneToMany
      private Set<Image> image;
 
      private Double rating;
+
+     @OneToMany
+     private Set<GroupOption> groupOptions;
+
+     @ManyToOne
+     private Category category;
+
 }

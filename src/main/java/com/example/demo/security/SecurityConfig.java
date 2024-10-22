@@ -74,10 +74,10 @@ public class SecurityConfig {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/login", "/register", "/hello","/merchant/register","/coupons/**","/orders/**","/deliveries/**","/foods/**").permitAll()
-                                .requestMatchers("/user/shops/**","/user/foods/**","/users/**","/cart/**","/wishlist/**").hasAnyAuthority("ROLE_USER")
+                                .requestMatchers("/login", "/register").permitAll()
+                                .requestMatchers("/users/**","/cart/**","/wishlist/**","/products/**").hasAnyAuthority("ROLE_USER")
                                 .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN")
-                                .requestMatchers("/merchant/**","/foods/**").hasAnyAuthority("ROLE_MERCHANT")
+                                .requestMatchers("/merchant/**").hasAnyAuthority("ROLE_MERCHANT")
 //                        .requestMatchers(HttpMethod.DELETE, "/categories",
 //                                "/typeOfQuestions",
 //                                "/questions",
