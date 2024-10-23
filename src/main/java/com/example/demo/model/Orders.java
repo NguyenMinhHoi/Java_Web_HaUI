@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.example.demo.utils.enumeration.OrderStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,5 +36,7 @@ public class Orders {
 
       @ManyToOne
       private User user;
+
+      private OrderStatus status;
 
 }
