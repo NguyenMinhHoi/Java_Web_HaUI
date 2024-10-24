@@ -2,6 +2,7 @@ package com.example.demo.serivce;
 
 import com.example.demo.model.Orders;
 import com.example.demo.model.Product;
+import com.example.demo.model.Variant;
 
 import java.util.Date;
 import java.util.List;
@@ -12,6 +13,7 @@ public interface OrderService extends GenerateService<Orders>{
     Orders createOrder(Orders order);
     Orders updateOrderStatus(Long orderId, String newStatus);
     List<Orders> findOrdersByDateRange(Date startDate, Date endDate);
+    void createOrderWithProductsFromManyShop(List<Variant> products, Long userId);
     Double calculateTotalRevenueForMerchant(Long merchantId);
     List<Product> findMostOrderedProducts(int limit);
     List<Object[]> getDailyRevenueBetweenDates(Date startDate, Date endDate);
