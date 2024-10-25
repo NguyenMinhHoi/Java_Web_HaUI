@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+import java.util.Date;
+
 @NoArgsConstructor
 @Entity
 @Data
@@ -26,5 +29,11 @@ public class Voucher {
     private Double valueCondition;
 
     private Double discount;
+
+    private Boolean active;
+
+    private Instant expirationDate;
+
+    private Instant startDate;
     
 }

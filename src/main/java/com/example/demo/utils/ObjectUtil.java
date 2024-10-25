@@ -3,6 +3,7 @@ package com.example.demo.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.micrometer.common.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,25 +71,5 @@ public class ObjectUtil {
         pattern = Pattern.compile(regexFormat);
         matcher = pattern.matcher(input);
         return !matcher.matches();
-    }
-
-    public static Map<String, String> convertObjToMap(Object obj) {
-        Map<String, String> map = new HashMap<>();
-        // Lấy tất cả các fields của class
-        Field[] fields = obj.getClass().getDeclaredFields();
-
-        for (Field field : fields) {
-            field.setAccessible(true); // Cho phép truy cập các trường private
-            try {
-                // Lấy tên và giá trị của trường
-                String fieldName = field.getName();
-                Object fieldValue = field.get(obj);
-                // Thêm vào map nếu giá trị không null
-                map.put(fieldName, CommonUtils.isEmpty(fieldValue) ? Const.EMPTY : fieldValue.toString());
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return map;
     }
 }

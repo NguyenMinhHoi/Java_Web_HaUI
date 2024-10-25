@@ -19,11 +19,9 @@ import java.io.Serializable;
 public class ProductOrderPK implements Serializable {
     @JsonBackReference
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
     private Orders order;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "variant_id")
     private Variant variant;
 
 }

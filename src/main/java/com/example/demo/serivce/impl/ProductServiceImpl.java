@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.beans.Transient;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -104,7 +105,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Variant getVariantByOption(List<OptionProduct> options) {
-        return variantRepository.findVariantByOptions((Set<OptionProduct>) options);
+        Set<Long> optionIds = options.stream()
+                .map(OptionProduct::getId)
+                .collect(Collectors.toSet());
+        Long variantId = variantRepository.findVariantByExactOptions(optionIds, options.size());
+        return variantRepository.findVariantById(variantId);
     }
 
     @Override
@@ -114,6 +119,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> getAllProductByShopId(Long shopId) {
+          
         return List.of();
     }
 

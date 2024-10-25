@@ -6,26 +6,23 @@ import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.serivce.OrderService;
 import com.example.demo.utils.enumeration.OrderStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-    @Autowired
     private OrderRepository orderRepository;
     private UserRepository userRepository;
-    @Autowired
     private OrderProductRepository orderProductRepository;
-    @Autowired
     private ProductServiceImpl productServiceImpl;
 
     @Override
@@ -60,9 +57,10 @@ public class OrderServiceImpl implements OrderService {
      * @throws RuntimeException if the user with the given ID is not found.
      */
     @Override
-    public void createOrderWithProductsFromManyShop(List<Variant> variants, Long userId) {
+    public List<Orders> createOrderWithProductsFromManyShop(List<Variant> variants, Long userId) {
         HashMap<String, List<Variant>> productMap = new HashMap<>();
         Optional<User> user = userRepository.findById(userId);
+        List<Orders> orders = new ArrayList<>();
         if (user.isPresent()) {
             for (int i = 0; i < variants.size(); i++) {
                 List<Variant> firstShopProducts = variants.stream()
@@ -95,36 +93,107 @@ public class OrderServiceImpl implements OrderService {
                         productServiceImpl.updateProductStock(variant.getProduct().getId(), variant.getQuantity(), variant.getId());
                     });
                     orderRepository.save(finalOrder);
+                    orders.add(finalOrder);
                 });
             });
         }
+        if(!orders.isEmpty()){
+            return orders;
+        }
+        else throw new RuntimeException("User not found");
     }
+
+
 
     @Override
     public List<Orders> findOrdersByUser(Long userId) {
-        // Implementation to find all orders for a specific user
         return orderRepository.findByUserId(userId);
     }
 
     @Override
     public List<Orders> findOrdersByMerchant(Long merchantId) {
-        // Implementation to find all orders for a specific merchant
         return orderRepository.findByMerchantId(merchantId);
     }
 
     @Override
-    public Orders createOrder(Orders order) {
-        // Implementation to create a new order
-        // You might want to perform validations, calculate total, etc.
-        return orderRepository.save(order);
+    public Orders getOrderById(Long orderId) {
+        return orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+    }
+
+    /**
+     * Creates an order with products from a single shop for a specific user.
+     * This method creates a new order, associates it with the user and merchant,
+     * adds the specified products to the order, updates the product stock,
+     * and calculates the total price of the order.
+     *
+     * @param products A list of Variant objects representing the products to be ordered.
+     *                 Each variant should contain information about the product, quantity, and associated merchant.
+     * @param userId   The ID of the user placing the order.
+     * @return The created and saved Orders object representing the new order.
+     * @throws RuntimeException if the user with the given ID is not found.
+     */
+    @Override
+    public Orders createOrderWithProductsFromOneShop(List<Variant> products, Long userId) {
+        Orders orders = new Orders();
+        orders.setUser(userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found")));
+        orders.setMerchant(products.stream().findFirst().get().getProduct().getMerchant());
+        orders.setStatus(OrderStatus.PENDING);
+        Orders finalOrder = orderRepository.save(orders);
+        products.forEach(variant -> {
+            OrderProduct orderProduct = new OrderProduct();
+            orderProduct.getProductOrderPK().setOrder(finalOrder);
+            orderProduct.getProductOrderPK().setVariant(variant);
+            orderProduct.setQuantity(variant.getQuantity());
+            Double variantPrice = orderProduct.getQuantity().doubleValue();
+            orderProductRepository.save(orderProduct);
+            finalOrder.setTotal(finalOrder.getTotal() + variantPrice);
+            productServiceImpl.updateProductStock(variant.getProduct().getId(), variant.getQuantity(), variant.getId());
+        });
+        return orderRepository.save(finalOrder);
     }
 
     @Override
-    public Orders updateOrderStatus(Long orderId, String newStatus) {
+    public List<Orders> createOrder(List<Variant> variants, Long userId, Long merchantNumber) {
+        if(merchantNumber == 1){
+            return Collections.singletonList(createOrderWithProductsFromOneShop(variants, userId)); // Create an order with products from a single shop
+        }else{
+            return createOrderWithProductsFromManyShop(variants, userId); // Create an order with products from multiple shops
+        }
+    }
+
+    private static final OrderStatus[] ORDER_STATUSES = {
+            OrderStatus.PENDING,
+            OrderStatus.DOING,
+            OrderStatus.SHIPPING,
+            OrderStatus.DONE,
+            OrderStatus.CANCEL
+    };
+
+    // ... other code ...
+
+    private OrderStatus getNextStatus(OrderStatus currentStatus) {
+        for (int i = 0; i < ORDER_STATUSES.length - 1; i++) {
+            if (ORDER_STATUSES[i] == currentStatus) {
+                return ORDER_STATUSES[i + 1];
+            }
+        }
+        return currentStatus;
+    }
+
+    /**
+     * Updates the status of an order to the next sequential status.
+     * The order of statuses is defined in the ORDER_STATUSES array.
+     *
+     * @param orderId The unique identifier of the order to be updated.
+     * @return The updated Orders object with the new status.
+     * @throws RuntimeException if the order with the given ID is not found.
+     */
+    @Override
+    public Orders updateOrderStatus(Long orderId) {
         // Implementation to update the status of an order
         Orders order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-        order.setStatus(OrderStatus.valueOf(newStatus));
+        order.setStatus(getNextStatus(order.getStatus()));
         return orderRepository.save(order);
     }
 
@@ -143,12 +212,19 @@ public class OrderServiceImpl implements OrderService {
                 .sum();
     }
 
+    /**
+     * Finds the most ordered products within a specific date range, with pagination.
+     *
+     * @param startDate The start date of the range to search for orders.
+     * @param endDate The end date of the range to search for orders.
+     * @param page The page number (0-based) for pagination.
+     * @param size The number of items per page.
+     * @return A Page of Product objects representing the most ordered products.
+     */
     @Override
-    public List<Product> findMostOrderedProducts(int limit) {
-        // Implementation to find the most frequently ordered products
-        // This might require a more complex query or data processing
-        // You might need to join with OrderProduct and Product tables
-        return null; // Placeholder
+    public Page<Product> findMostOrderedProducts(Date startDate, Date endDate, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return orderRepository.findMostOrderedProducts(startDate, endDate, pageable);
     }
 
     @Override
@@ -192,5 +268,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Object[]> getMonthlyProductRevenueAnalysis(Date startDate, Date endDate) {
         return orderRepository.getMonthlyProductRevenueAnalysis(startDate, endDate);
+    }
+
+    @Override
+    public List<Product> findMostOrderedProducts(int limit) {
+        return List.of();
     }
 }

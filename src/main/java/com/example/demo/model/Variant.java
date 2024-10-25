@@ -1,15 +1,16 @@
 package com.example.demo.model;
 
+import com.example.demo.model.Image;
+import com.example.demo.model.OptionProduct;
+import com.example.demo.model.Product;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
@@ -19,16 +20,18 @@ public class Variant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
     private Product product;
 
-    @OneToOne
-    private Image Image;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "image_id")
+    private Image image;
 
     private Integer quantity;
 
     private Double price;
 
-    @ManyToMany
+    @OneToMany
     private Set<OptionProduct> options;
 }

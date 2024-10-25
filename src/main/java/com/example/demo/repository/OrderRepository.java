@@ -2,6 +2,8 @@ package com.example.demo.repository;
 
 import com.example.demo.model.OrderProduct;
 import com.example.demo.model.Orders;
+import com.example.demo.model.Product;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -115,4 +117,13 @@ public interface OrderRepository extends JpaRepository<Orders,Long> {
             "op.productOrderPK.variant.product.id, op.productOrderPK.variant.product.name " +
             "ORDER BY year(o.date), month(o.date), totalRevenue DESC")
     List<Object[]> getMonthlyProductRevenueAnalysis(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
+
+    @Query("SELECT op.productOrderPK.variant.product AS product, SUM(op.quantity) AS totalQuantity " +
+            "FROM OrderProduct op " +
+            "WHERE op.productOrderPK.order.date BETWEEN :startDate AND :endDate " +
+            "GROUP BY op.productOrderPK.variant.product " +
+            "ORDER BY totalQuantity DESC")
+    Page<Product> findMostOrderedProducts(@Param("startDate") Date startDate,
+                                          @Param("endDate") Date endDate,
+                                          Pageable pageable);
 }
