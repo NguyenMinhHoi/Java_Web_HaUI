@@ -26,6 +26,8 @@ public class Merchant {
 
         private String description;
 
+        private String email;
+
         @OneToMany
         private Set<Product> products;
 
