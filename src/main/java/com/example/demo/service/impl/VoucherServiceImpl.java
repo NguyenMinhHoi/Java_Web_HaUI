@@ -1,10 +1,10 @@
-package com.example.demo.serivce.impl;
+package com.example.demo.service.impl;
 
 import com.example.demo.model.Product;
 import com.example.demo.model.Voucher;
 import com.example.demo.model.VoucherCondition;
 import com.example.demo.repository.VoucherRepository;
-import com.example.demo.serivce.VoucherService;
+import com.example.demo.service.VoucherService;
 import com.example.demo.utils.enumeration.VoucherType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

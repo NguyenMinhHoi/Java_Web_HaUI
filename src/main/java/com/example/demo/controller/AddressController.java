@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
 
-import com.example.demo.serivce.AddressService;
+import com.example.demo.service.AddressService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Controller;

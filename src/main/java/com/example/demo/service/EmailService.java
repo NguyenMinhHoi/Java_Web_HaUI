@@ -38,39 +38,39 @@ public class EmailService {
     }
 
     public void sendMerchantRegistrationAcceptance(String to, String merchantName) throws MessagingException {
-    String subject = "Welcome to Our Merchant Program!";
-    String htmlContent = String.format(
-        "<html>" +
-        "<head>" +
-        "<style>" +
-        "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
-        "h1 { color: #4a4a4a; }" +
-        ".container { max-width: 600px; margin: 0 auto; padding: 20px; }" +
-        ".header { background-color: #f8f9fa; padding: 20px; text-align: center; }" +
-        ".content { padding: 20px; }" +
-        ".footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; }" +
-        "</style>" +
-        "</head>" +
-        "<body>" +
-        "<div class='container'>" +
-        "<div class='header'>" +
-        "<h1>Welcome to Our Merchant Program!</h1>" +
-        "</div>" +
-        "<div class='content'>" +
-        "<h2>Congratulations, %s!</h2>" +
-        "<p>Your application to become a merchant has been accepted.</p>" +
-        "<p>You now have access to our merchant tools and can start selling your products.</p>" +
-        "<p>If you have any questions, please don't hesitate to contact our support team.</p>" +
-        "</div>" +
-        "<div class='footer'>" +
-        "<p>Best regards,<br>Your E-commerce Team</p>" +
-        "</div>" +
-        "</div>" +
-        "</body></html>",
-        merchantName
-    );
-    sendHtmlMessage(to, subject, htmlContent);
-}
+        String subject = "Chào mừng bạn đến với Chương trình Đối tác Kinh doanh của chúng tôi!";
+        String htmlContent = String.format(
+            "<html>" +
+            "<head>" +
+            "<style>" +
+            "body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
+            "h1 { color: #4a4a4a; }" +
+            ".container { max-width: 600px; margin: 0 auto; padding: 20px; }" +
+            ".header { background-color: #f8f9fa; padding: 20px; text-align: center; }" +
+            ".content { padding: 20px; }" +
+            ".footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; }" +
+            "</style>" +
+            "</head>" +
+            "<body>" +
+            "<div class='container'>" +
+            "<div class='header'>" +
+            "<h1>Chào mừng đến với Chương trình Đối tác Kinh doanh!</h1>" +
+            "</div>" +
+            "<div class='content'>" +
+            "<h2>Xin chúc mừng, %s!</h2>" +
+            "<p>Đơn đăng ký trở thành đối tác kinh doanh của bạn đã được chấp nhận.</p>" +
+            "<p>Bây giờ bạn đã có quyền truy cập vào các công cụ dành cho đối tác và có thể bắt đầu bán sản phẩm của mình.</p>" +
+            "<p>Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với đội ngũ hỗ trợ của chúng tôi.</p>" +
+            "</div>" +
+            "<div class='footer'>" +
+            "<p>Trân trọng,<br>Đội ngũ Thương mại Điện tử của bạn</p>" +
+            "</div>" +
+            "</div>" +
+            "</body></html>",
+            merchantName
+        );
+        sendHtmlMessage(to, subject, htmlContent);
+    }
 
     public void sendRoyalMerchantRegistrationAcceptance(String to, String merchantName) throws MessagingException {
         String subject = "Congratulations on Becoming a Royal Merchant!";

@@ -1,10 +1,10 @@
-package com.example.demo.serivce.impl;
+package com.example.demo.service.impl;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.OrderProductRepository;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.serivce.OrderService;
+import com.example.demo.service.OrderService;
 import com.example.demo.utils.enumeration.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

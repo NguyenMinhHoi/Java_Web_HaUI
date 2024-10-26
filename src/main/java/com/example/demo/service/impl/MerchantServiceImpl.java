@@ -1,9 +1,9 @@
-package com.example.demo.serivce.impl;
+package com.example.demo.service.impl;
 
 import com.example.demo.model.Merchant;
 import com.example.demo.model.Product;
 import com.example.demo.repository.MerchantRepository;
-import com.example.demo.serivce.MerchantService;
+import com.example.demo.service.MerchantService;
 import com.example.demo.service.EmailService;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +48,6 @@ public class MerchantServiceImpl implements MerchantService {
 
         // Send acceptance email
         try {
-            System.out.println("Email service is null: " + (emailService == null));
             emailService.sendMerchantRegistrationAcceptance(merchant.getEmail(), merchant.getName());
         } catch (Exception e) {
             System.out.println("Error sending email: " + e.getMessage());
@@ -68,4 +67,5 @@ public class MerchantServiceImpl implements MerchantService {
             e.printStackTrace();
         }
     }
+
 }

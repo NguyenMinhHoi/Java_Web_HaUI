@@ -2,8 +2,9 @@ package com.example.demo;
 
 import com.example.demo.model.Merchant;
 import com.example.demo.repository.MerchantRepository;
-import com.example.demo.serivce.impl.MerchantServiceImpl;
+
 import com.example.demo.service.EmailService;
+import com.example.demo.service.impl.MerchantServiceImpl;
 import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.Test;
 

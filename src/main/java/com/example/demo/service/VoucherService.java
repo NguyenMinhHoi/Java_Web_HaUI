@@ -1,4 +1,4 @@
-package com.example.demo.serivce;
+package com.example.demo.service;
 
 import com.example.demo.model.Voucher;
 import com.example.demo.model.VoucherCondition;

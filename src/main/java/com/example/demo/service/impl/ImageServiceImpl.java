@@ -1,9 +1,9 @@
-package com.example.demo.serivce.impl;
+package com.example.demo.service.impl;
 
 import com.example.demo.model.Image;
 import com.example.demo.model.Product;
 import com.example.demo.repository.ImageRepository;
-import com.example.demo.serivce.ImageService;
+import com.example.demo.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

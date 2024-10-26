@@ -1,8 +1,8 @@
-package com.example.demo.serivce.impl;
+package com.example.demo.service.impl;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
-import com.example.demo.serivce.ProductService;
+import com.example.demo.service.ProductService;
 import com.example.demo.utils.CommonUtils;
 import com.example.demo.utils.Const;
 import lombok.RequiredArgsConstructor;

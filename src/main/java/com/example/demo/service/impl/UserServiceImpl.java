@@ -1,9 +1,9 @@
-package com.example.demo.serivce.impl;
+package com.example.demo.service.impl;
 
 import com.example.demo.model.User;
 import com.example.demo.model.UserPrinciple;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.serivce.UserService;
+import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
