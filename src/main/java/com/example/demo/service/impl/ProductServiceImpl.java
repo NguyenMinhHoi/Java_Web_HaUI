@@ -53,8 +53,9 @@ public class ProductServiceImpl implements ProductService {
     public void createProduct(Product product) {
           Product back =  productRepository.save(product);
           Variant variant = new Variant();
-          new OptionProduct();
-          variant.getOptions().add(OptionProduct.builder().name(Const.DEFAULT).build());
+          Set<OptionProduct> optionProducts = new HashSet<>();
+          optionProducts.add(OptionProduct.builder().name(Const.DEFAULT).build());
+          variant.setOptions(optionProducts);
           variant.setProduct(back);
           variantRepository.save(variant);
     }
@@ -65,7 +66,7 @@ public class ProductServiceImpl implements ProductService {
      * option combinations from the given group options.
      *
      * @param groupOptions A list of GroupOption objects representing the different option groups for the product.
-     * @param contractId The ID of the product (contract) for which variants are being saved.
+     * @param productId The ID of the product (contract) for which variants are being saved.
      *
      * This method doesn't return a value, but it performs the following operations:
      * 1. Updates the product's group options.
@@ -74,25 +75,28 @@ public class ProductServiceImpl implements ProductService {
      */
     @Transient
     @Override
-    public void saveVariants(List<GroupOption> groupOptions, Long contractId) {
-        Product product = productRepository.findById(contractId).get();
-        product.setGroupOptions((Set<GroupOption>) groupOptions);
+    public void saveVariants(List<GroupOption> groupOptions, Long productId) {
+        Product product = productRepository.findById(productId).get();
+        product.setGroupOptions(groupOptions.stream().collect(Collectors.toSet()));
         productRepository.save(product);
     
         GroupOption firstGroup = groupOptions.stream().findFirst().get();
         List<Variant> firstVariants = new ArrayList<>();
         for(OptionProduct optionProduct: firstGroup.getOptions()){
             Variant newVariant = new Variant();
+            newVariant.setOptions(new HashSet<>());
             newVariant.getOptions().add(optionProduct);
             firstVariants.add(newVariant);
         }
-        List<Variant> lastVariant = new ArrayList<>();
+
         for(int i = 0 ; i < groupOptions.size();i++){
             if(i != 0){
+                List<Variant> lastVariant = new ArrayList<>();
                 for(int j = 0 ; j < firstVariants.size();j++){
-                    Variant newVariant = new Variant();
-                    newVariant.setOptions(firstVariants.get(j).getOptions());
+                    Set<OptionProduct> before = firstVariants.get(j).getOptions();
                     for(OptionProduct optionProduct: groupOptions.get(i).getOptions()){
+                        Variant newVariant = new Variant();
+                        newVariant.setOptions(new HashSet<>(before));
                         newVariant.getOptions().add(optionProduct);
                         lastVariant.add(newVariant);
                     }
@@ -100,7 +104,8 @@ public class ProductServiceImpl implements ProductService {
                 firstVariants = lastVariant;
             }
         }
-        variantRepository.saveAll(lastVariant);
+        firstVariants.stream().forEach(variant -> System.out.println(variant.toString()));
+        variantRepository.saveAll(firstVariants);
     }
 
     @Override

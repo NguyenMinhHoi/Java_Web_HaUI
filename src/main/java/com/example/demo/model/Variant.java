@@ -6,6 +6,7 @@ import com.example.demo.model.Product;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
 @Entity
@@ -34,4 +35,18 @@ public class Variant {
 
     @OneToMany
     private Set<OptionProduct> options;
+
+    private Integer stock;
+
+    @Override
+    public String toString() {
+        return "Variant{" +
+                "id=" + id +
+                ", product=" + product +
+                ", image=" + image +
+                ", quantity=" + quantity +
+                ", price=" + price +
+                ", options=" + options +
+                '}';
+    }
 }

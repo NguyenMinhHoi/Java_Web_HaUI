@@ -13,6 +13,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -273,5 +276,109 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Product> findMostOrderedProducts(int limit) {
         return List.of();
+    }
+
+
+    @Override
+    public double getTotalRevenueForMerchant(Long merchantId) {
+        return findOrdersByMerchant(merchantId).stream()
+                .mapToDouble(Orders::getTotal)
+                .sum();
+    }
+
+    @Override
+    public List<Orders> getOrdersByMerchantAndDateRange(Long merchantId, Date startDate, Date endDate) {
+        return findOrdersByMerchant(merchantId).stream()
+                .filter(order -> order.getDate().after(startDate) && order.getDate().before(endDate))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<String, Double> getRevenueByProductForMerchant(Long merchantId) {
+        return findOrdersByMerchant(merchantId).stream()
+                .flatMap(order -> order.getProducts().stream())
+                .collect(Collectors.groupingBy(
+                        op -> op.getProductOrderPK().getVariant().getProduct().getName(),
+                        Collectors.summingDouble(op -> op.getQuantity() * op.getProductOrderPK().getVariant().getPrice())
+                ));
+    }
+
+    @Override
+    public List<Product> getTopSellingProductsForMerchant(Long merchantId, int limit) {
+        Map<Product, Long> productSales = findOrdersByMerchant(merchantId).stream()
+                .flatMap(order -> order.getProducts().stream())
+                .collect(Collectors.groupingBy(
+                        op -> op.getProductOrderPK().getVariant().getProduct(),
+                        Collectors.summingLong(op -> op.getQuantity())
+                ));
+
+        return productSales.entrySet().stream()
+                .sorted(Map.Entry.<Product, Long>comparingByValue().reversed())
+                .limit(limit)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<String, Long> getOrderCountByStatusForMerchant(Long merchantId) {
+        return findOrdersByMerchant(merchantId).stream()
+                .collect(Collectors.groupingBy(
+                        order -> order.getStatus().name(),
+                        Collectors.counting()
+                ));
+    }
+
+    @Override
+    public double getAverageOrderValueForMerchant(Long merchantId) {
+        List<Orders> orders = findOrdersByMerchant(merchantId);
+        return orders.stream()
+                .mapToDouble(Orders::getTotal)
+                .average()
+                .orElse(0.0);
+    }
+
+    @Override
+    public Map<String, Double> getMonthlyRevenueForMerchant(Long merchantId, int year) {
+        return findOrdersByMerchant(merchantId).stream()
+                .filter(order -> order.getDate().getYear() + 1900 == year)
+                .collect(Collectors.groupingBy(
+                        order -> String.format("%02d", order.getDate().getMonth() + 1),
+                        Collectors.summingDouble(Orders::getTotal)
+                ));
+    }
+    @Override
+    public Map<Integer, Double> getDailyRevenueForMonth(Long merchantId, int year, int month) {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        return getDailyRevenueForDateRange(merchantId, startDate, endDate);
+    }
+
+    @Override
+    public Map<Integer, Double> getDailyRevenueForQuarter(Long merchantId, int year, int quarter) {
+        LocalDate startDate = LocalDate.of(year, (quarter - 1) * 3 + 1, 1);
+        LocalDate endDate = startDate.plusMonths(3).minusDays(1);
+
+        return getDailyRevenueForDateRange(merchantId, startDate, endDate);
+    }
+
+    @Override
+    public Map<Integer, Double> getDailyRevenueForYear(Long merchantId, int year) {
+        LocalDate startDate = LocalDate.of(year, 1, 1);
+        LocalDate endDate = LocalDate.of(year, 12, 31);
+
+        return getDailyRevenueForDateRange(merchantId, startDate, endDate);
+    }
+
+    private Map<Integer, Double> getDailyRevenueForDateRange(Long merchantId, LocalDate startDate, LocalDate endDate) {
+        Date start = Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date end = Date.from(endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant());
+
+        return getOrdersByMerchantAndDateRange(merchantId, start, end).stream()
+                .collect(Collectors.groupingBy(
+                        order -> order.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate().getDayOfMonth(),
+                        Collectors.summingDouble(Orders::getTotal)
+                ));
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public interface OrderService extends GenerateService<Orders>{
     List<Orders> findOrdersByUser(Long userId);
@@ -29,5 +30,14 @@ public interface OrderService extends GenerateService<Orders>{
     Orders getOrderById(Long orderId);
     Orders createOrderWithProductsFromOneShop(List<Variant> products, Long userId);
     Page<Product> findMostOrderedProducts(Date startDate, Date endDate, int page, int size);
-
+    double getTotalRevenueForMerchant(Long merchantId);
+    List<Orders> getOrdersByMerchantAndDateRange(Long merchantId, Date startDate, Date endDate);
+    Map<String, Double> getRevenueByProductForMerchant(Long merchantId);
+    List<Product> getTopSellingProductsForMerchant(Long merchantId, int limit);
+    Map<String, Long> getOrderCountByStatusForMerchant(Long merchantId);
+    double getAverageOrderValueForMerchant(Long merchantId);
+    Map<String, Double> getMonthlyRevenueForMerchant(Long merchantId, int year);
+    Map<Integer, Double> getDailyRevenueForMonth(Long merchantId, int year, int month);
+    Map<Integer, Double> getDailyRevenueForQuarter(Long merchantId, int year, int quarter);
+    Map<Integer, Double> getDailyRevenueForYear(Long merchantId, int year);
 }

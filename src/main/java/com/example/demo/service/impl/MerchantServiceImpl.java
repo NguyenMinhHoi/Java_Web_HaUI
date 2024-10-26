@@ -1,6 +1,7 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.model.Merchant;
+import com.example.demo.model.Orders;
 import com.example.demo.model.Product;
 import com.example.demo.repository.MerchantRepository;
 import com.example.demo.service.MerchantService;
@@ -9,7 +10,10 @@ import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class MerchantServiceImpl implements MerchantService {
@@ -19,6 +23,7 @@ public class MerchantServiceImpl implements MerchantService {
 
     @Autowired
     private EmailService emailService;
+    // Inject the OrderServiceImpl
 
     @Override
     public List<Merchant> findAll() {
