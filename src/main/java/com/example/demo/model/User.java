@@ -29,6 +29,7 @@ public class User implements Serializable {
 
     @Column(nullable = false)
     private String confirmPassword;
+
     private boolean enabled = true;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -37,12 +38,18 @@ public class User implements Serializable {
             inverseJoinColumns = {@JoinColumn(name = "role_id")})
     private Set<Role> roles;
 
-
     @OneToMany
     private Set<Address> addresses;
 
     @OneToOne
     private Image avatar;
 
+    private String email;
+
+    private String phoneNumber;
+
+    private String name;
+
+    private String gender;
 
 }

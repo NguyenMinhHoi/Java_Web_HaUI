@@ -3,12 +3,14 @@ package com.example.demo.service.impl;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.service.ProductService;
+import com.example.demo.service.dto.ProductDTO;
 import com.example.demo.utils.CommonUtils;
 import com.example.demo.utils.Const;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.weaver.ast.Var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Persistent;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,16 +24,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
-    private ProductRepository productRepository;
-    private VariantRepository variantRepository;
-    private GroupOptionRepository groupOptionRepository;
-    private OptionRepository optionRepository;
-    private ReviewRepository reviewRepository;
-    private CartRepository cartRepository;
+    private final ProductRepository productRepository;
+    private final VariantRepository variantRepository;
+    private final GroupOptionRepository groupOptionRepository;
+    private final OptionRepository optionRepository;
+    private final ReviewRepository reviewRepository;
+    private final CartRepository cartRepository;
+    private final ImageRepository imageRepository;
+
 
     @Override
     public List<Product> findAll() {
-        return List.of();
+        return productRepository.findAll();
     }
 
     @Override
@@ -44,20 +48,169 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
+    private ProductDTO toProductDTO(Product product) {
+        ProductDTO productDTO = ProductDTO.builder()
+                .sold(product.getSold())
+                .name(product.getName())
+                .image(product.getImage())
+                .category(product.getCategory())
+                .description(product.getDescription())
+                .rating(product.getRating())
+                .id(product.getId())
+                .build();
+        List<Variant> variants = variantRepository.findVariantByProductId(product.getId());
+        
+        if (variants != null && !variants.isEmpty()) {
+            Double maxPrice = variants.stream()
+                    .map(Variant::getPrice)
+                    .filter(Objects::nonNull)
+                    .max(Double::compare)
+                    .orElse(null);
+            Double minPrice = variants.stream()
+                    .map(Variant::getPrice)
+                    .filter(Objects::nonNull)
+                    .min(Double::compare)
+                    .orElse(null);
+            productDTO.setMaxPrice(maxPrice);
+            productDTO.setMinPrice(minPrice);
+        } else {
+            productDTO.setMaxPrice(null);
+            productDTO.setMinPrice(null);
+        }
+        return productDTO;
+    }
+
+    @Override
+    public HashMap<String, Object> getDetailsProducts(Long productId) {
+        HashMap<String,Object> result = new HashMap<>();
+
+        ProductDTO productDTO = toProductDTO(productRepository.findById(productId).orElse(null));
+        result.put("product",productDTO);
+
+        List<Variant> variants = variantRepository.findVariantByProductId(productId);
+        result.put("variants",variants);
+
+        List<ProductDTO> relatedProducts = getRelatedProducts(productId);
+        result.put("relatedProducts",relatedProducts);
+
+        return result;
+    }
+
+    @Override
+    public List<ProductDTO> getRelatedProducts(Long productId) {
+        // Find the current product
+        Product currentProduct = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        // Find products in the same category, excluding the current product
+        List<Product> relatedProducts = productRepository.findByCategoryAndIdNot(
+                currentProduct.getCategory(),
+                currentProduct.getId(),
+                PageRequest.of(0, 10) // Limit to 10 related products
+        );
+
+        // If we don't have enough related products, find more based on other criteria
+        if (relatedProducts.size() < 10) {
+            List<Product> additionalProducts = productRepository.findByIdNot(
+                    currentProduct.getId(),
+                    PageRequest.of(0, 10 - relatedProducts.size())
+            );
+            relatedProducts.addAll(additionalProducts);
+        }
+
+        // Sort related products by relevance (you can define your own sorting logic)
+        relatedProducts.sort((p1, p2) -> {
+            // Compare ratings, handling null values
+            if (p1.getRating() == null && p2.getRating() == null) {
+                // If both ratings are null, compare by sold count
+                return compareSoldCounts(p1, p2);
+            } else if (p1.getRating() == null) {
+                return 1; // p2 comes first if only p1's rating is null
+            } else if (p2.getRating() == null) {
+                return -1; // p1 comes first if only p2's rating is null
+            }
+
+            int ratingComparison = Double.compare(p2.getRating(), p1.getRating());
+            if (ratingComparison != 0) {
+                return ratingComparison;
+            }
+
+            // If ratings are equal, compare by sold count
+            return compareSoldCounts(p1, p2);
+        });
+        // Convert to DTOs and return
+        return relatedProducts.stream()
+                .map(this::toProductDTO)
+                .collect(Collectors.toList());
+    }
+
+    private int compareSoldCounts(Product p1, Product p2) {
+        if (p1.getSold() == null && p2.getSold() == null) {
+            return 0; // If both sold counts are null, consider them equal
+        } else if (p1.getSold() == null) {
+            return 1; // p2 comes first if only p1's sold count is null
+        } else if (p2.getSold() == null) {
+            return -1; // p1 comes first if only p2's sold count is null
+        }
+        return Long.compare(p2.getSold(), p1.getSold()); // Compare non-null sold counts
+    }
+
+    @Override
+        public List<ProductDTO> findAllPage(int page, int size) {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Product> productPage = productRepository.findAll(pageable);
+            List<Product> products = productPage.getContent();
+            return products.stream()
+                    .map(this::toProductDTO)
+                    .collect(Collectors.toList());
+        }
+
     @Override
     public Product save(Product entity) {
         return entity;
     }
 
     @Override
-    public void createProduct(Product product) {
-          Product back =  productRepository.save(product);
-          Variant variant = new Variant();
-          Set<OptionProduct> optionProducts = new HashSet<>();
-          optionProducts.add(OptionProduct.builder().name(Const.DEFAULT).build());
-          variant.setOptions(optionProducts);
-          variant.setProduct(back);
-          variantRepository.save(variant);
+    public Product createProduct(Product product) {
+        // Tạo và lưu Image
+        Set<Image> savedImages = product.getImage().stream().map(image1 ->
+            imageRepository.save(image1)
+        ).collect(Collectors.toSet());
+        // Cập nhật tham chiếu Image trong Product
+        product.setImage(savedImages);
+
+        // Lưu Product
+        Product savedProduct = productRepository.save(product);
+
+        // Tạo và lưu Variant mặc định
+        Variant variant = new Variant();
+        Set<OptionProduct> optionProducts = new HashSet<>();
+
+        // Tạo và lưu OptionProduct
+        OptionProduct defaultOption = OptionProduct.builder().name(Const.DEFAULT).build();
+        OptionProduct savedOption = optionRepository.save(defaultOption);
+
+        optionProducts.add(savedOption);
+        variant.setOptions(optionProducts);
+        variant.setProduct(savedProduct);
+        Image variantCloneImage = new Image();
+        variantCloneImage.setPath(savedImages.stream().findFirst().get().getPath());
+        variantCloneImage.setId(null);
+        variantCloneImage = imageRepository.save(variantCloneImage);
+        variant.setImage(variantCloneImage);
+        variantRepository.save(variant);
+
+        return savedProduct;
+    }
+
+    @Override
+    public List<Variant> getVariantsByProductId(Long productId) {
+        List<Variant> variants = variantRepository.findVariantByProductId(productId);
+        variants.stream().forEach(variant -> {
+            variant.getProduct().setMerchant(null);
+            variant.setProduct(null);
+        });
+        return variants;
     }
 
     /**
@@ -76,36 +229,51 @@ public class ProductServiceImpl implements ProductService {
     @Transient
     @Override
     public void saveVariants(List<GroupOption> groupOptions, Long productId) {
-        Product product = productRepository.findById(productId).get();
-        product.setGroupOptions(groupOptions.stream().collect(Collectors.toSet()));
-        productRepository.save(product);
-    
-        GroupOption firstGroup = groupOptions.stream().findFirst().get();
-        List<Variant> firstVariants = new ArrayList<>();
-        for(OptionProduct optionProduct: firstGroup.getOptions()){
-            Variant newVariant = new Variant();
-            newVariant.setOptions(new HashSet<>());
-            newVariant.getOptions().add(optionProduct);
-            firstVariants.add(newVariant);
-        }
+        try {
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        for(int i = 0 ; i < groupOptions.size();i++){
-            if(i != 0){
-                List<Variant> lastVariant = new ArrayList<>();
-                for(int j = 0 ; j < firstVariants.size();j++){
-                    Set<OptionProduct> before = firstVariants.get(j).getOptions();
-                    for(OptionProduct optionProduct: groupOptions.get(i).getOptions()){
-                        Variant newVariant = new Variant();
-                        newVariant.setOptions(new HashSet<>(before));
-                        newVariant.getOptions().add(optionProduct);
-                        lastVariant.add(newVariant);
-                    }
-                }
-                firstVariants = lastVariant;
+            List<Variant> productVariants = variantRepository.findVariantByProductId(productId);
+            groupOptions.stream().flatMap(group -> group.getOptions().stream()).map(optionProduct -> optionRepository.save(optionProduct)).collect(Collectors.toList());
+
+            // Now it's safe to delete variants
+            variantRepository.deleteAll(productVariants);
+            // Save all GroupOptions first
+            List<GroupOption> savedGroupOptions = groupOptionRepository.saveAll(groupOptions);
+
+            // Update product with saved GroupOptions
+            product.setGroupOptions(new HashSet<>(savedGroupOptions));
+            productRepository.save(product);
+            GroupOption firstGroup = groupOptions.stream().findFirst().get();
+            List<Variant> firstVariants = new ArrayList<>();
+            for(OptionProduct optionProduct: firstGroup.getOptions()){
+                Variant newVariant = new Variant();
+                newVariant.setOptions(new HashSet<>());
+                newVariant.getOptions().add(optionProduct);
+                firstVariants.add(newVariant);
             }
+
+            for(int i = 0 ; i < groupOptions.size();i++){
+                if(i != 0){
+                    List<Variant> lastVariant = new ArrayList<>();
+                    for(int j = 0 ; j < firstVariants.size();j++){
+                        Set<OptionProduct> before = firstVariants.get(j).getOptions();
+                        for(OptionProduct optionProduct: groupOptions.get(i).getOptions()){
+                            Variant newVariant = new Variant();
+                            newVariant.setOptions(new HashSet<>(before));
+                            newVariant.getOptions().add(optionProduct);
+                            lastVariant.add(newVariant);
+                        }
+                    }
+                    firstVariants = lastVariant;
+                }
+            }
+            firstVariants.stream().forEach(variant -> System.out.println(variant.toString()));
+            firstVariants.stream().forEach(variant -> variant.setProduct(product));
+            variantRepository.saveAll(firstVariants);
+        }catch (Exception e){
+            e.printStackTrace();
         }
-        firstVariants.stream().forEach(variant -> System.out.println(variant.toString()));
-        variantRepository.saveAll(firstVariants);
     }
 
     @Override
@@ -124,8 +292,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> getAllProductByShopId(Long shopId) {
-          
-        return List.of();
+        List<Product> products = productRepository.findAllByMerchantId(shopId);
+        return products;
     }
 
     @Override

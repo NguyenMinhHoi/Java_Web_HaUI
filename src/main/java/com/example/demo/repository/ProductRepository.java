@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import com.example.demo.model.Category;
 import com.example.demo.model.Product;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM Product p WHERE " +
@@ -25,4 +25,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.isDiscount IS NOT NULL AND p.isDiscount = true")
     List<Product> findDiscountedProducts(Pageable pageable);
 
+    List<Product> findAllByMerchantId(Long merchantId);
+
+    List<Product> findByCategoryAndIdNot(Category category, Long productId, Pageable pageable);
+
+    List<Product> findByIdNot(Long productId, Pageable pageable);
 }

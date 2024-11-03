@@ -6,6 +6,7 @@ import com.example.demo.model.User;
 import com.example.demo.service.RoleService;
 import com.example.demo.service.UserService;
 import com.example.demo.serivce.impl.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,5 +127,18 @@ public class UserController {
 
         userService.save(user);
         return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String jwt = authHeader.substring(7);
+            // Thêm token vào blacklist (cần triển khai)
+        }
+
+        // Xóa authentication khỏi SecurityContext
+        SecurityContextHolder.clearContext();
+
+        return ResponseEntity.ok("Logged out successfully");
     }
 }

@@ -12,4 +12,7 @@ import java.util.Map;
 
 public interface MerchantService extends GenerateService<Merchant> {
     void approveMerchantRegistration(Merchant merchant);
+    Merchant createMerchant(Merchant merchant);
+    Merchant getMerchantById(Long id);
+
 }

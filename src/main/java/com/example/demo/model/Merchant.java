@@ -39,4 +39,7 @@ public class Merchant {
         private Double rating;
 
         private Double totalSold;
+
+        @OneToOne
+        private User user;
 }

@@ -1,18 +1,21 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.model.Merchant;
-import com.example.demo.model.Orders;
-import com.example.demo.model.Product;
+import com.example.demo.model.*;
 import com.example.demo.repository.MerchantRepository;
 import com.example.demo.service.MerchantService;
 import com.example.demo.service.EmailService;
+import com.example.demo.service.UserService;
+import com.example.demo.utils.CommonUtils;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +26,11 @@ public class MerchantServiceImpl implements MerchantService {
 
     @Autowired
     private EmailService emailService;
+    @Qualifier("userService")
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private RoleServiceImpl roleServiceImpl;
     // Inject the OrderServiceImpl
 
     @Override
@@ -58,6 +66,31 @@ public class MerchantServiceImpl implements MerchantService {
             System.out.println("Error sending email: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public Merchant createMerchant(Merchant merchant) {
+        // Add any necessary validation or business logic here
+        Optional<User> user = userService.findById(merchant.getUser().getId());
+        if(user.isPresent()){
+            merchant.setUser(user.get());
+            Role role = roleServiceImpl.findByName("ROLE_MERCHANT");
+            user.get().getRoles().add(role);
+            userService.save(user.get());
+            merchantRepository.save(merchant);
+        }else{
+            throw new RuntimeException("User not found");
+        }
+        return merchantRepository.save(merchant);
+    }
+
+    @Override
+    public Merchant getMerchantById(Long userId) {
+        Merchant merchant = merchantRepository.findByUserId(userId);
+        if(!CommonUtils.isEmpty(merchant)){
+            merchant.setUser(null);
+        }
+        return merchant;
     }
 
     public void upgradeToRoyalMerchant(Merchant merchant) {

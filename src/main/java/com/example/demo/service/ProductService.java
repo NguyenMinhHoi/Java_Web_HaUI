@@ -1,11 +1,15 @@
 package com.example.demo.service;
 
 import com.example.demo.model.*;
+import com.example.demo.service.dto.ProductDTO;
 
+import java.util.HashMap;
 import java.util.List;
 
 public interface ProductService extends GenerateService<Product>{
-    void createProduct(Product product);
+    Product createProduct(Product product);
+
+    List<ProductDTO> findAllPage(int page, int size);
 
     void saveVariants(List<GroupOption> groupOptions,Long productId);
 
@@ -24,5 +28,10 @@ public interface ProductService extends GenerateService<Product>{
     void updateProductStock(Long productId, int quantityChange, Long variantId);
     List<Review> getProductReviews(Long productId, int page, int size);
     void addToCart(Long userId, Long productId, int quantity);
+    List<Variant> getVariantsByProductId(Long productId);
+
+    HashMap<String,Object> getDetailsProducts(Long productId);
+
+    List<ProductDTO> getRelatedProducts(Long productId);
 
 }
