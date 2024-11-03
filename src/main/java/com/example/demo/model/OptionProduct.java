@@ -18,4 +18,6 @@ public class OptionProduct {
       private Long id;
 
       private String name;
+
+      private String groupName;
 }

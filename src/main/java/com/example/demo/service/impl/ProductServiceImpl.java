@@ -57,6 +57,7 @@ public class ProductServiceImpl implements ProductService {
                 .description(product.getDescription())
                 .rating(product.getRating())
                 .id(product.getId())
+                .groupOptions(product.getGroupOptions())
                 .build();
         List<Variant> variants = variantRepository.findVariantByProductId(product.getId());
         
@@ -213,6 +214,31 @@ public class ProductServiceImpl implements ProductService {
         return variants;
     }
 
+    private List<Variant> generateVariants(List<GroupOption> groupOptions, Product product) {
+        List<Variant> variants = new ArrayList<>();
+        generateVariantsRecursive(groupOptions, 0, new HashSet<>(), variants, product);
+        return variants;
+    }
+
+    private void generateVariantsRecursive(List<GroupOption> groupOptions, int groupIndex,
+                                           Set<OptionProduct> currentOptions,
+                                           List<Variant> variants, Product product) {
+        if (groupIndex == groupOptions.size()) {
+            Variant variant = new Variant();
+            variant.setOptions(new HashSet<>(currentOptions));
+            variant.setProduct(product);
+            variants.add(variant);
+            return;
+        }
+
+        GroupOption currentGroup = groupOptions.get(groupIndex);
+        for (OptionProduct option : currentGroup.getOptions()) {
+            currentOptions.add(option);
+            generateVariantsRecursive(groupOptions, groupIndex + 1, currentOptions, variants, product);
+            currentOptions.remove(option);
+        }
+    }
+
     /**
      * Saves variants for a product based on the provided group options.
      * This method creates and saves new variants for a product by combining all possible
@@ -234,44 +260,55 @@ public class ProductServiceImpl implements ProductService {
                     .orElseThrow(() -> new RuntimeException("Product not found"));
 
             List<Variant> productVariants = variantRepository.findVariantByProductId(productId);
-            groupOptions.stream().flatMap(group -> group.getOptions().stream()).map(optionProduct -> optionRepository.save(optionProduct)).collect(Collectors.toList());
+
+            // Create a map of option combinations to images
+            Map<Set<String>, Image> optionToImageMap = new HashMap<>();
+            for (Variant variant : productVariants) {
+                Set<String> optionName = variant.getOptions().stream()
+                        .map(OptionProduct::getName)
+                        .collect(Collectors.toSet());
+                optionToImageMap.put(optionName, variant.getImage());
+            }
+
+            groupOptions.stream().flatMap(group -> group.getOptions().stream())
+                    .forEach(optionProduct -> optionRepository.save(optionProduct));
 
             // Now it's safe to delete variants
             variantRepository.deleteAll(productVariants);
+
             // Save all GroupOptions first
+            groupOptions.forEach(groupOption -> groupOption.getOptions()
+                    .forEach(optionProduct -> optionProduct.setGroupName(groupOption.getName())));
             List<GroupOption> savedGroupOptions = groupOptionRepository.saveAll(groupOptions);
 
             // Update product with saved GroupOptions
             product.setGroupOptions(new HashSet<>(savedGroupOptions));
             productRepository.save(product);
-            GroupOption firstGroup = groupOptions.stream().findFirst().get();
-            List<Variant> firstVariants = new ArrayList<>();
-            for(OptionProduct optionProduct: firstGroup.getOptions()){
-                Variant newVariant = new Variant();
-                newVariant.setOptions(new HashSet<>());
-                newVariant.getOptions().add(optionProduct);
-                firstVariants.add(newVariant);
-            }
 
-            for(int i = 0 ; i < groupOptions.size();i++){
-                if(i != 0){
-                    List<Variant> lastVariant = new ArrayList<>();
-                    for(int j = 0 ; j < firstVariants.size();j++){
-                        Set<OptionProduct> before = firstVariants.get(j).getOptions();
-                        for(OptionProduct optionProduct: groupOptions.get(i).getOptions()){
-                            Variant newVariant = new Variant();
-                            newVariant.setOptions(new HashSet<>(before));
-                            newVariant.getOptions().add(optionProduct);
-                            lastVariant.add(newVariant);
-                        }
-                    }
-                    firstVariants = lastVariant;
+            List<Variant> newVariants = generateVariants(savedGroupOptions, product);
+
+            // Associate images with new variants based on matching options
+            for (Variant newVariant : newVariants) {
+                Set<String> newVariantOptionNames = newVariant.getOptions().stream()
+                        .map(OptionProduct::getName)
+                        .collect(Collectors.toSet());
+
+                Image matchingImage = optionToImageMap.get(newVariantOptionNames);
+                if (matchingImage != null) {
+                    newVariant.setImage(matchingImage);
+                } else {
+                    // If no matching image found, you might want to set a default image or handle this case
+                    // For now, we'll leave it as null
                 }
             }
-            firstVariants.stream().forEach(variant -> System.out.println(variant.toString()));
-            firstVariants.stream().forEach(variant -> variant.setProduct(product));
-            variantRepository.saveAll(firstVariants);
-        }catch (Exception e){
+            newVariants.forEach(variant -> {
+                if(!CommonUtils.isEmpty(variant.getImage())){
+                    variant.getImage().setId(null);
+                }
+                variant.setProduct(product);
+            });
+            variantRepository.saveAll(newVariants);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
