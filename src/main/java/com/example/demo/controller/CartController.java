@@ -32,8 +32,11 @@ public class CartController {
     }
 
     @PutMapping("")
-    public ResponseEntity<Cart> updateCart(@RequestBody HashMap<String,Long> body) {
-        return ResponseEntity.ok(cartService.updateCart(body.get("userId"), body.get("variantId")));
+    public ResponseEntity<Cart> updateCart(@RequestBody HashMap<String,Object> body) {
+
+        Long userId = Long.parseLong(body.get("userId").toString());
+        Long variantId = Long.parseLong(body.get("variantId").toString());
+        return ResponseEntity.ok(cartService.updateCart(userId, variantId));
     }
 
     @PostMapping

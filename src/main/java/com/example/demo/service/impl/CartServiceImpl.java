@@ -5,11 +5,13 @@ import com.example.demo.model.Product;
 import com.example.demo.model.Variant;
 import com.example.demo.repository.CartRepository;
 import com.example.demo.repository.ProductRepository;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.VariantRepository;
 import com.example.demo.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -23,6 +25,8 @@ public class CartServiceImpl implements CartService {
 
     @Autowired
     private VariantRepository variantRepository;
+    @Autowired
+    private UserRepository userRepository;
 
 
     @Override
@@ -51,7 +55,8 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartRepository.findCartByUserId(userId);
         if (cart == null) {
             cart = new Cart();
-            cart.setId(userId);
+            cart.setUser(userRepository.findById(userId).get());
+            cart.setVariants(new HashSet<>());
         }
 
         Variant product = variantRepository.findVariantById(variantId);
