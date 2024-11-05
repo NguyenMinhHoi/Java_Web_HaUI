@@ -33,7 +33,7 @@ public class Variant {
 
     private Double price;
 
-    @OneToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     private Set<OptionProduct> options;
 
     private Integer stock;

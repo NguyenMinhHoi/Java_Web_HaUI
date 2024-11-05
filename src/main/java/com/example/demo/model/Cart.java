@@ -18,5 +18,5 @@ public class Cart {
       private User user;
 
       @ManyToMany
-      private Set<Product> products;
+      private Set<Variant> variants;
 }

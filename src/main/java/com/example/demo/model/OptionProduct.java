@@ -20,4 +20,5 @@ public class OptionProduct {
       private String name;
 
       private String groupName;
+
 }

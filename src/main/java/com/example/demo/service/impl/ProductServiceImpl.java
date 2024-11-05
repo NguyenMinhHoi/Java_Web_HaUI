@@ -155,16 +155,17 @@ public class ProductServiceImpl implements ProductService {
         }
         return Long.compare(p2.getSold(), p1.getSold()); // Compare non-null sold counts
     }
-
-    @Override
+        @Override
         public List<ProductDTO> findAllPage(int page, int size) {
-            Pageable pageable = PageRequest.of(page, size);
-            Page<Product> productPage = productRepository.findAll(pageable);
-            List<Product> products = productPage.getContent();
+
+            List<Product> products = productRepository.findAll();
+            products.subList((page - 1) * size, Math.min(page * size, products.size()));
+
             return products.stream()
                     .map(this::toProductDTO)
                     .collect(Collectors.toList());
         }
+
 
     @Override
     public Product save(Product entity) {
@@ -258,10 +259,9 @@ public class ProductServiceImpl implements ProductService {
         try {
             Product product = productRepository.findById(productId)
                     .orElseThrow(() -> new RuntimeException("Product not found"));
-
+    
             List<Variant> productVariants = variantRepository.findVariantByProductId(productId);
-
-            // Create a map of option combinations to images
+    
             Map<Set<String>, Image> optionToImageMap = new HashMap<>();
             for (Variant variant : productVariants) {
                 Set<String> optionName = variant.getOptions().stream()
@@ -269,46 +269,45 @@ public class ProductServiceImpl implements ProductService {
                         .collect(Collectors.toSet());
                 optionToImageMap.put(optionName, variant.getImage());
             }
-
+    
             groupOptions.stream().flatMap(group -> group.getOptions().stream())
-                    .forEach(optionProduct -> optionRepository.save(optionProduct));
-
-            // Now it's safe to delete variants
+                    .forEach(optionRepository::save);
+    
             variantRepository.deleteAll(productVariants);
-
-            // Save all GroupOptions first
+    
             groupOptions.forEach(groupOption -> groupOption.getOptions()
                     .forEach(optionProduct -> optionProduct.setGroupName(groupOption.getName())));
             List<GroupOption> savedGroupOptions = groupOptionRepository.saveAll(groupOptions);
-
-            // Update product with saved GroupOptions
+    
             product.setGroupOptions(new HashSet<>(savedGroupOptions));
             productRepository.save(product);
-
+    
             List<Variant> newVariants = generateVariants(savedGroupOptions, product);
-
-            // Associate images with new variants based on matching options
+    
             for (Variant newVariant : newVariants) {
                 Set<String> newVariantOptionNames = newVariant.getOptions().stream()
                         .map(OptionProduct::getName)
                         .collect(Collectors.toSet());
-
+    
                 Image matchingImage = optionToImageMap.get(newVariantOptionNames);
-                if (matchingImage != null) {
-                    newVariant.setImage(matchingImage);
-                } else {
-                    // If no matching image found, you might want to set a default image or handle this case
-                    // For now, we'll leave it as null
-                }
+                newVariant.setImage(matchingImage);
             }
+    
             newVariants.forEach(variant -> {
                 if(!CommonUtils.isEmpty(variant.getImage())){
                     variant.getImage().setId(null);
                 }
                 variant.setProduct(product);
             });
+            for (Variant newVariant : newVariants) {
+    String options = newVariant.getOptions().stream()
+            .map(OptionProduct::getName)
+            .collect(Collectors.joining(", "));
+    System.out.println("Variant options: " + options);
+}
             variantRepository.saveAll(newVariants);
         } catch (Exception e) {
+            // Replace with proper logging
             e.printStackTrace();
         }
     }
