@@ -6,12 +6,16 @@ import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.OrderService;
 import com.example.demo.utils.enumeration.OrderStatus;
+import com.example.demo.utils.enumeration.PaymentType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.beans.Transient;
+import java.time.Instant;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -20,13 +24,19 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-    private OrderRepository orderRepository;
-    private UserRepository userRepository;
-    private OrderProductRepository orderProductRepository;
-    private ProductServiceImpl productServiceImpl;
+    private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
+    private final OrderProductRepository orderProductRepository;
+    private final ProductServiceImpl productServiceImpl;
+
+    public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepository, OrderProductRepository orderProductRepository, ProductServiceImpl productServiceImpl) {
+        this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
+        this.orderProductRepository = orderProductRepository;
+        this.productServiceImpl = productServiceImpl;
+    }
 
     @Override
     public List<Orders> findAll() {
@@ -59,6 +69,7 @@ public class OrderServiceImpl implements OrderService {
      * @param userId   The ID of the user placing the order.
      * @throws RuntimeException if the user with the given ID is not found.
      */
+    @Transient
     @Override
     public List<Orders> createOrderWithProductsFromManyShop(List<Variant> variants, Long userId) {
         HashMap<String, List<Variant>> productMap = new HashMap<>();
@@ -87,6 +98,7 @@ public class OrderServiceImpl implements OrderService {
                     value.forEach(variant -> {
                         Double orderPrice = 0.0;
                         OrderProduct orderProduct = new OrderProduct();
+                        orderProduct.setProductOrderPK(new ProductOrderPK());
                         orderProduct.getProductOrderPK().setOrder(finalOrder);
                         orderProduct.getProductOrderPK().setVariant(variant);
                         orderProduct.setQuantity(variant.getQuantity());
@@ -103,7 +115,8 @@ public class OrderServiceImpl implements OrderService {
         if(!orders.isEmpty()){
             return orders;
         }
-        else throw new RuntimeException("User not found");
+        else
+            throw new RuntimeException("User not found");
     }
 
 
@@ -136,14 +149,17 @@ public class OrderServiceImpl implements OrderService {
      * @throws RuntimeException if the user with the given ID is not found.
      */
     @Override
+    @Transient
     public Orders createOrderWithProductsFromOneShop(List<Variant> products, Long userId) {
         Orders orders = new Orders();
         orders.setUser(userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found")));
         orders.setMerchant(products.stream().findFirst().get().getProduct().getMerchant());
         orders.setStatus(OrderStatus.PENDING);
+        orders.setTotal((double) 0);
         Orders finalOrder = orderRepository.save(orders);
         products.forEach(variant -> {
             OrderProduct orderProduct = new OrderProduct();
+            orderProduct.setProductOrderPK(new ProductOrderPK());
             orderProduct.getProductOrderPK().setOrder(finalOrder);
             orderProduct.getProductOrderPK().setVariant(variant);
             orderProduct.setQuantity(variant.getQuantity());
@@ -156,12 +172,25 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Orders> createOrder(List<Variant> variants, Long userId, Long merchantNumber) {
-        if(merchantNumber == 1){
-            return Collections.singletonList(createOrderWithProductsFromOneShop(variants, userId)); // Create an order with products from a single shop
-        }else{
-            return createOrderWithProductsFromManyShop(variants, userId); // Create an order with products from multiple shops
+    public List<Orders> createOrder(List<Variant> variants, Long userId, Long merchantNumber, HashMap<String,String> details) {
+        try {
+            List<Orders> orders = new LinkedList<>();
+            if(merchantNumber == 1){
+                orders = Collections.singletonList(createOrderWithProductsFromOneShop(variants, userId)); // Create an order with products from a single shop
+            }else{
+                orders = createOrderWithProductsFromManyShop(variants, userId); // Create an order with products from multiple shops
+            }
+            orders.forEach(order -> {
+                order.setAddress(details.get("address"));
+                order.setDate(new Date());
+                order.setPaymentType(PaymentType.valueOf(details.get("paymentType")));
+                orderRepository.save(order);
+            });
+            return orders;
+        }catch (Exception e) {
+            e.printStackTrace();
         }
+        return null;
     }
 
     private static final OrderStatus[] ORDER_STATUSES = {

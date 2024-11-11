@@ -448,7 +448,7 @@ public class ProductServiceImpl implements ProductService {
         variant.setQuantity(variant.getQuantity() - quantityChange);
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
-        product.setSold(product.getSold() + quantityChange);
+        product.setSold(CommonUtils.isEmpty(product.getSold()) ? quantityChange : product.getSold() + quantityChange);
         productRepository.save(product);
     }
 

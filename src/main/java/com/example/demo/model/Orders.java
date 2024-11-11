@@ -1,13 +1,16 @@
 package com.example.demo.model;
 
 import com.example.demo.utils.enumeration.OrderStatus;
+import com.example.demo.utils.enumeration.PaymentType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.lang.Nullable;
 
-import java.sql.Date;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Set;
 
 
@@ -30,8 +33,7 @@ public class Orders {
       @ManyToMany
       private Set<OrderProduct> products;
 
-      @ManyToOne
-      private Address address;
+      private String address;
 
       private Double total;
 
@@ -39,7 +41,10 @@ public class Orders {
       private Merchant merchant;
 
       @ManyToOne
+      @Nullable
       private User user;
+
+     private PaymentType paymentType;
 
       private OrderStatus status;
 

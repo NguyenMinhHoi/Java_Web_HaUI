@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.OrderDTO;
 import com.example.demo.model.Orders;
 import com.example.demo.model.Variant;
 import com.example.demo.service.OrderService;
@@ -19,8 +20,14 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping("")
-    public ResponseEntity<List<Orders>> createOrder(@RequestBody HashMap<String,Object> body) {
-           List<Orders> orders = orderService.createOrder((List<Variant>) body.get("variants"), (Long) body.get("userId"), (Long) body.get("merchantNumber"));
+    public ResponseEntity<List<Orders>> createOrder(@RequestBody OrderDTO orderDTO) {
+          List<Orders> orders = orderService.createOrder(
+              orderDTO.getVariants(),
+              orderDTO.getUserId(),
+              orderDTO.getMerchantNumber(),
+              orderDTO.getDetail()
+          );
+          orders.forEach(order -> order.setUser(null));
           return ResponseEntity.ok().body(orders);
     }
 }

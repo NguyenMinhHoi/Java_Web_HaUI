@@ -8,6 +8,7 @@ import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.VariantRepository;
 import com.example.demo.service.CartService;
+import com.example.demo.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,9 @@ public class CartServiceImpl implements CartService {
     private VariantRepository variantRepository;
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ProductService productService;
 
 
     @Override
@@ -65,5 +69,19 @@ public class CartServiceImpl implements CartService {
         }
 
         return cartRepository.save(cart);
+    }
+
+    @Override
+    public Cart getCartByUserId(Long userId) {
+        return cartRepository.findCartByUserId(userId);
+    }
+
+    @Override
+    public Cart UpdateVariantCart(Long userId,Long variantCurrent, Long variantNew) {
+        Cart cart = cartRepository.findCartByUserId(userId);
+        cart.getVariants().remove(variantRepository.findVariantById(variantCurrent));
+        cart.getVariants().add(variantRepository.findVariantById(variantNew));
+        cart = cartRepository.save(cart);
+        return cart;
     }
 }

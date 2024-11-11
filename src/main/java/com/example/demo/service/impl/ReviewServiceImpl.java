@@ -1,16 +1,20 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.model.Product;
-import com.example.demo.model.Review;
+import com.example.demo.model.*;
+import com.example.demo.repository.ImageRepository;
+import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.ReviewRepository;
 import com.example.demo.service.ReviewService;
+import com.example.demo.service.UserService;
+import com.example.demo.utils.CommonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
 import java.util.List;
 
 import com.example.demo.model.Product;
 import com.example.demo.model.Review;
-import com.example.demo.model.User;
 import com.example.demo.repository.ReviewRepository;
 import com.example.demo.service.ReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +29,15 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Autowired
     private ReviewRepository reviewRepository;
+
+
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private ImageRepository imageRepository;
+    @Autowired
+    private ProductRepository productRepository;
+
 
     // Các phương thức cơ bản từ GenerateService
     @Override
@@ -44,6 +57,31 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Review save(Review entity) {
+        entity.setUser(userService.findById(entity.getUser().getId()).get());
+        if (entity.getImages() != null && !entity.getImages().isEmpty()) {
+            Set<Image> savedImages = entity.getImages().stream()
+                    .map(image -> {
+                        if(!CommonUtils.isEmpty(image.getPath()))
+                           return imageRepository.save(image);
+                        else
+                            return null;
+                    }).collect(Collectors.toSet());
+            entity.setImages(savedImages);
+        }
+        Product product = productRepository.findById(entity.getProduct().getId()).get();
+        Review savedReview = reviewRepository.save(entity);
+
+        // Recalculate the product's rating
+        List<Review> productReviews = findByProductId(product.getId());
+        double averageRating = productReviews.stream()
+                .mapToInt(Review::getRating)
+                .average()
+                .orElse(0.0);
+
+        // Update the product's rating
+        product.setRating(averageRating);
+        entity.setProduct(product);
+        entity.setDate(Instant.now());
         return reviewRepository.save(entity);
     }
 
